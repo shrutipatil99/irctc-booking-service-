@@ -1,0 +1,1122 @@
+/*
+// BookingServiceApplication.java  , main class
+
+package com.irctc.booking_service;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.UUID;
+import com.irctc.booking_service.Util.UserServiceUtil;
+import com.irctc.booking_service.entities.Train;
+import com.irctc.booking_service.entities.User;
+import com.irctc.booking_service.service.UserBookingService;
+import com.irctc.booking_service.entities.Ticket;
+
+//import org.springframework.boot.SpringApplication;
+
+//@SpringBootApplication
+public class BookingServiceApplication {
+	
+	
+
+	public static void main(String[] args) {
+		
+		String lastSource = null;
+		String lastDestination = null;
+				
+		System.out.println("Running Train Booking System");
+        Scanner scanner = new Scanner(System.in);
+        int option = 0;
+        UserBookingService userBookingService;
+        try{
+            userBookingService = new UserBookingService();
+        }catch(IOException ex){
+        	ex.printStackTrace();
+            System.out.println("There is something wrong");
+            return;
+        }
+        
+        Train trainSelectedForBooking = null; 
+        while(option!=7){
+            System.out.println("Choose option");
+            System.out.println("1. Sign up");
+            System.out.println("2. Login");
+            System.out.println("3. Fetch Bookings");
+            System.out.println("4. Search Trains");
+            System.out.println("5. Book a Seat");
+            System.out.println("6. Cancel my Booking");
+            System.out.println("7. Exit the App");
+            option = Integer.parseInt(scanner.next());
+            
+            switch (option){
+                case 1:
+                	 scanner.nextLine(); // clear buffer
+                	 
+                	String nameToSignUp = "";
+                	while(nameToSignUp.isEmpty()) {
+                	    System.out.println("Enter the username to signup:");
+                	    nameToSignUp = scanner.nextLine().trim();
+                	   
+                	    if(nameToSignUp.isEmpty()) {
+                	        System.out.println("Username cannot be empty ❌");
+                	    }
+                	}
+
+                	String passwordToSignUp = "";
+                	while(passwordToSignUp.isEmpty()) {
+                	    System.out.println("Enter the password to signup:");
+                	    passwordToSignUp = scanner.nextLine().trim();
+                	    
+                	    if(passwordToSignUp.isEmpty()) {
+                	        System.out.println("Password cannot be empty ❌");
+                	    }
+                	}
+                   
+                	User userToSignup = new User(
+                		    nameToSignUp,
+                		    UserServiceUtil.hashPassword(passwordToSignUp),
+                		    new ArrayList<>(),
+                		    UUID.randomUUID().toString()
+                		);
+                    
+                    userBookingService.signup(userToSignup);
+                    break;
+                
+                case 2:
+                    System.out.println("Enter the username to Login");
+                    String nameToLogin = scanner.next();
+
+                    System.out.println("Enter the password to Login");
+                    String passwordToLogin = scanner.next();
+
+                    if (userBookingService.loginUser(nameToLogin, passwordToLogin)) {
+                        System.out.println("Login Successful ✅");
+                    } else {
+                        System.out.println("Invalid Credentials ❌");
+                    }
+                    break;
+                   
+                    
+                case 3:
+                	if (!userBookingService.isUserLoggedIn()) {
+                	    System.out.println("Please login first ❌");
+                	    break;
+                	}
+                	
+                    System.out.println("Fetching your bookings");
+                    userBookingService.fetchBookings();
+                    break;
+                    
+                case 4:
+                	
+                    System.out.println("Type your source station");
+                    String source = scanner.next();
+                    System.out.println("Type your destination station");
+                    String dest = scanner.next();
+                    
+                 // ✅ RESET OLD TRAIN SELECTION HERE
+                    trainSelectedForBooking = null;
+                    
+                    lastSource = source;
+                    lastDestination = dest;
+                    
+                    List<Train> trains = userBookingService.getTrains(source, dest);
+                    
+                    
+                    // ✅ Step 1: check empty
+                    if (trains.isEmpty()) {
+                        System.out.println("No trains found ❌");
+                        break;
+                    }
+
+                    // ✅ Step 2: print trains
+                    int index = 1;
+                    for (Train t : trains) {
+                        System.out.println(index + " Train id : " + t.getTrainId());
+                        index++;
+                    }
+
+                    // ✅ Step 3: ask user to select
+                    System.out.println("Select a train by typing 1,2,3...");
+                    int choice = Integer.parseInt(scanner.next());
+
+                    if (choice < 1 || choice > trains.size()) {
+                        System.out.println("Invalid selection ❌");
+                        break;
+                    }
+
+                    trainSelectedForBooking = trains.get(choice - 1);
+                    break;
+                  
+              
+                	
+                case 5:
+                	if (!userBookingService.isUserLoggedIn()) {
+                	    System.out.println("Please login first ❌");
+                	    break;
+                	}
+                	
+                	// validation
+                    if (trainSelectedForBooking == null) {
+                        System.out.println("Please search and select a train first ❌");
+                        break;
+                    }
+
+                    if (lastSource == null || lastDestination == null) {
+                        System.out.println("Please search train first ❌");
+                        break;
+                    }
+
+                    System.out.println("Select a seat out of these seats");
+                    List<List<Integer>> seats = userBookingService.fetchSeats(trainSelectedForBooking);
+
+                    if (seats == null || seats.isEmpty()) {
+                        System.out.println("No seats available ❌");
+                        break;
+                    }
+
+                    // Display seat matrix
+                    for (List<Integer> rowList : seats) {
+                        for (Integer val : rowList) {
+                            System.out.print(val + " ");
+                        }
+                        System.out.println();
+                    }
+
+                    int row = -1, col = -1;
+
+                    // ✅ Safe row input
+                    while (true) {
+                        System.out.println("Enter the row number (0 to " + (seats.size() - 1) + "):");
+                        String input = scanner.next();
+                        try {
+                            row = Integer.parseInt(input);
+                            if (row < 0 || row >= seats.size()) {
+                                System.out.println("Invalid row number ❌");
+                            } else {
+                                break;
+                            }
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid input! Please enter a numeric row ❌");
+                        }
+                    }
+
+                    // ✅ Safe column input
+                    while (true) {
+                        System.out.println("Enter the column number (0 to " + (seats.get(0).size() - 1) + "):");
+                        String input = scanner.next();
+                        try {
+                            col = Integer.parseInt(input);
+                            if (col < 0 || col >= seats.get(0).size()) {
+                                System.out.println("Invalid column number ❌");
+                            } else {
+                                break;
+                            }
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid input! Please enter a numeric column ❌");
+                        }
+                    }
+
+                    System.out.println("Booking your seat....");
+                    scanner.nextLine(); // clear buffer
+
+                  
+                    System.out.println("Enter date (yyyy-mm-dd):");
+                    String date = scanner.nextLine();
+
+                    Boolean booked = userBookingService.bookTrainSeat(
+                            trainSelectedForBooking, row, col, lastSource, lastDestination, date
+                    );
+                    
+                    if (booked) {
+                        System.out.println("Booked! Enjoy your journey ✅");
+                     // ✅ RESET OLD TRAIN SELECTION HERE
+                        trainSelectedForBooking = null;
+                    } else {
+                        System.out.println("Can't book this seat ❌");
+                    }
+                    break;
+                    
+                case 6:
+                    if (!userBookingService.isUserLoggedIn()) {
+                        System.out.println("Please login first ❌");
+                        break;
+                    }
+
+                    List<Ticket> bookings = userBookingService.getLoggedInUser().getTicketsBooked();
+
+                    if (bookings == null || bookings.isEmpty()) {
+                        System.out.println("No bookings to cancel ❌");
+                        break;
+                    }
+
+                    System.out.println("Your Bookings:");
+
+                    for (int i = 0; i < bookings.size(); i++) {
+                        Ticket t = bookings.get(i);
+                        System.out.println((i + 1) + ". Train: " + t.getTrain().getTrainId()
+                                + " | Seat: (" + t.getRow() + "," + t.getCol() + ")"
+                                + " | Date: " + t.getDateOfTravel());
+                    }
+
+                    System.out.println("Select booking number to cancel:");
+                    int cancelChoice = Integer.parseInt(scanner.next());
+
+                    boolean cancelled = userBookingService.cancelBooking(cancelChoice - 1);
+
+                    if (cancelled) {
+                        System.out.println("Booking cancelled successfully ✅");
+                    } else {
+                        System.out.println("Cancellation failed ❌");
+                    }
+                    break;
+                    
+                default:
+                    break;
+            }
+         
+        }
+     // ✅ ADD HERE
+        scanner.close();
+        System.out.println("Thank you for using IRCTC 🚆");
+	}
+}
+
+//BookingController.java
+
+package com.irctc.booking_service.controller;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class BookingController {
+
+    @GetMapping("/")
+    public String home() {
+        return "IRCTC Booking Service Running 🚆";
+    }
+}
+
+//Ticket.java
+
+package com.irctc.booking_service.entities;
+
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+//import java.sql.Date;
+
+public class Ticket {
+
+		
+	private String ticketId;
+    private String userId;
+    private String source;
+    private String destination;
+    private String dateOfTravel;
+    private Train train;
+    public Ticket(){}
+    private int row;
+    private int col;
+
+	    public Ticket(String ticketId, String userId, String source, String destination,
+	            String dateOfTravel, Train train, int row, int col) {
+				  this.ticketId = ticketId;
+				  this.userId = userId;
+				  this.source = source;
+				  this.destination = destination;
+				  this.dateOfTravel = dateOfTravel;
+				  this.train = train;
+				  this.row = row;
+				  this.col = col;
+	}
+
+    @JsonIgnore
+    public String getTicketInfo(){
+        return String.format("Ticket ID: %s belongs to User %s from %s to %s on %s", ticketId, userId, source, destination, dateOfTravel);
+    }
+
+    public String getTicketId(){
+        return ticketId;
+    }
+
+    public void setTicketId(String ticketId){
+        this.ticketId = ticketId;
+    }
+
+    public String getSource(){
+        return source;
+    }
+
+    public void setSource(String source){
+        this.source = source;
+    }
+
+    public String getUserId(){
+        return userId;
+    }
+
+    public void setUserId(String userId){
+        this.userId = userId;
+    }
+
+    public String getDestination(){
+        return destination;
+    }
+
+    public void setDestination(String destination){
+        this.destination = destination;
+    }
+
+    public String getDateOfTravel(){
+        return dateOfTravel;
+    }
+
+    public void setDateOfTravel(String dateOfTravel){
+        this.dateOfTravel = dateOfTravel;
+    }
+
+    public Train getTrain(){
+        return train;
+    }
+
+    public void setTrain(Train train){
+        this.train = train;
+    }
+    public int getRow() {
+        return row;
+    }
+
+    public void setRow(int row) {
+        this.row = row;
+    }
+
+    public int getCol() {
+        return col;
+    }
+
+    public void setCol(int col) {
+        this.col = col;
+    }
+	
+}
+
+//Train.java
+
+package com.irctc.booking_service.entities;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.List;
+import java.util.Map;
+
+
+public class Train {
+
+	private String trainId;
+	private String trainNo;
+	private List<List<Integer>>seats;
+	private Map<String, String>stationTimes;
+										//LocalTime bcz i need only IST time but we take String bcz in indury use dateparsing
+	private List<String>stations;
+	
+	
+	
+	public Train(){}
+
+	public Train(String trainId, String trainNo, List<List<Integer>> seats,
+            Map<String, String> stationTimes, List<String> stations) {
+			   this.trainId = trainId;
+			   this.trainNo = trainNo;
+			   this.seats = seats;
+			   this.stationTimes = stationTimes;
+			   this.stations = stations;
+			}
+
+    public List<String> getStations(){
+        return stations;
+    }
+
+    public List<List<Integer>> getSeats() {
+        return seats;
+    }
+
+    public void setSeats(List<List<Integer>> seats) {
+        this.seats = seats;
+    }
+    public String getTrainId(){
+        return trainId;
+    }
+
+    public Map<String, String> getStationTimes(){
+        return stationTimes;
+    }
+
+    public String getTrainNo(){
+        return trainNo;
+    }
+
+    public void setTrainNo(String trainNo){
+        this.trainNo = trainNo;
+    }
+
+    public void setTrainId(String trainId){
+        this.trainId = trainId;
+    }
+
+    public void setStationTimes(Map<String, String> stationTimes) {
+        this.stationTimes = stationTimes;
+    }
+    public void setStations(List<String> stations){
+        this.stations = stations;
+    }
+
+    @JsonIgnore
+    public String getTrainInfo(){
+        return String.format("Train ID: %s Train No: %s", trainId, trainNo);
+    }
+
+}
+
+//User.java
+
+package com.irctc.booking_service.entities;
+
+import java.util.List;
+
+public class User {
+
+	private String name;
+	private String hashedPassword;
+	private List<Ticket>ticketsBooked;
+	private String userId;
+	
+	public User(String name, String hashedPassword, List<Ticket> ticketsBooked, String userId){
+        this.name = name;
+        this.hashedPassword = hashedPassword;
+        this.ticketsBooked = ticketsBooked;
+        this.userId = userId;
+    }
+    public User(){}
+
+    public String getName() {
+        return name;
+    }
+
+    public String getHashedPassword() {
+        return hashedPassword;
+    }
+
+    public List<Ticket> getTicketsBooked() {
+        return ticketsBooked;
+    }
+
+    public void printTickets() {
+        if (ticketsBooked == null || ticketsBooked.isEmpty()) {
+            System.out.println("No tickets booked ❌");
+            return;
+        }
+
+        for (Ticket ticket : ticketsBooked) {
+            System.out.println(ticket.getTicketInfo());
+        }
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setHashedPassword(String hashedPassword) {
+        this.hashedPassword = hashedPassword;
+    }
+
+    public void setTicketsBooked(List<Ticket> ticketsBooked) {
+        this.ticketsBooked = ticketsBooked;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+}
+
+// TrainService.java
+
+package com.irctc.booking_service.service;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+
+import java.util.List;
+import java.io.File;
+
+import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import com.irctc.booking_service.entities.Train;
+;
+
+
+public class TrainService {
+
+	private List<Train> trainList;
+    private ObjectMapper objectMapper = new ObjectMapper();
+    private static final String TRAIN_DB_PATH = "local_Db/train.json";
+
+    public TrainService() throws IOException {
+        /*File trains = new File(TRAIN_DB_PATH);
+        trainList = objectMapper.readValue(trains, new TypeReference<List<Train>>() {});*/
+        
+    	File trains = new File(TRAIN_DB_PATH);
+
+    	// create file if not exists
+    	if (!trains.exists()) {
+    	    File parentDir = trains.getParentFile();
+    	    if (parentDir != null && !parentDir.exists()) {
+    	        parentDir.mkdirs();
+    	    }
+    	    trains.createNewFile();
+    	    trainList = new java.util.ArrayList<>();
+    	    return;
+    	}
+
+    	// if file is empty
+    	if (trains.length() == 0) {
+    	    trainList = new java.util.ArrayList<>();
+    	    return;
+    	}
+
+    	// read from file
+    	trainList = objectMapper.readValue(trains, new TypeReference<List<Train>>() {});
+    }
+
+    public List<Train> searchTrains(String source, String destination) {
+        return trainList.stream().filter(train -> validTrain(train, source, destination)).collect(Collectors.toList());
+    }
+    
+	
+    public void addTrain(Train newTrain) {
+        // Check if a train with the same trainId already exists
+        Optional<Train> existingTrain = trainList.stream()
+                .filter(train -> train.getTrainId().equalsIgnoreCase(newTrain.getTrainId()))
+                .findFirst();
+
+        if (existingTrain.isPresent()) {
+            // If a train with the same trainId exists, update it instead of adding a new one
+            updateTrain(newTrain);
+        } else {
+            // Otherwise, add the new train to the list
+            trainList.add(newTrain);
+            saveTrainListToFile();
+        }
+    }
+
+    public void updateTrain(Train updatedTrain) {
+        // Find the index of the train with the same trainId
+        OptionalInt index = IntStream.range(0, trainList.size())
+                .filter(i -> trainList.get(i).getTrainId().equalsIgnoreCase(updatedTrain.getTrainId()))
+                .findFirst();
+
+        if (index.isPresent()) {
+            // If found, replace the existing train with the updated one
+            trainList.set(index.getAsInt(), updatedTrain);
+            saveTrainListToFile();
+        } else {
+            // If not found, treat it as adding a new train
+            addTrain(updatedTrain);
+        }
+    }
+
+    private void saveTrainListToFile() {
+        try {
+            objectMapper.writeValue(new File(TRAIN_DB_PATH), trainList);
+        } catch (IOException e) {
+        	System.out.println("Error saving train data ❌");
+        	
+            e.printStackTrace(); // Handle the exception based on your application's requirements
+        }
+    }
+
+    private boolean validTrain(Train train, String source, String destination) {
+        
+        List<String> stationOrder = train.getStations();
+
+        if (stationOrder == null || stationOrder.isEmpty()) {
+            return false;
+        }
+        
+        int sourceIndex = -1;
+        int destinationIndex = -1;
+
+        for (int i = 0; i < stationOrder.size(); i++) {
+            if (stationOrder.get(i).equalsIgnoreCase(source)) {
+                sourceIndex = i;
+            }
+            if (stationOrder.get(i).equalsIgnoreCase(destination)) {
+                destinationIndex = i;
+            }
+        }
+
+        return sourceIndex != -1 && destinationIndex != -1 && sourceIndex < destinationIndex;
+    }
+}
+
+// UserBookingService.java
+
+package com.irctc.booking_service.service;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+import java.util.Optional;
+import java.nio.file.Paths;
+import java.util.*;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.irctc.booking_service.entities.User;
+import com.irctc.booking_service.Util.UserServiceUtil;
+import com.irctc.booking_service.entities.Train;
+import com.irctc.booking_service.entities.Ticket;
+
+public class UserBookingService{
+	
+		private User loggedInUser;
+		private List<User>userList;
+		
+		private  ObjectMapper objectMapper = new ObjectMapper();		//need to add fasterxml file in dependency in gradle
+		
+		private static final String USER_PATH="local_Db/users.json";
+		
+		
+		public UserBookingService(User loggedInUser)throws IOException  {
+			this.loggedInUser=loggedInUser;
+			 loadUserListFromFile();
+		}
+		
+		public UserBookingService()throws IOException {
+			loadUserListFromFile();		
+		}
+		
+		private void loadUserListFromFile() throws IOException {
+			/*File users= new File(USER_PATH);
+	        userList = objectMapper.readValue(users,new TypeReference<List<User>>() {});       
+										      //why we are using TypeReference bcz we are taking user from list
+												//readValue posiblity to thorew error  so we use IOException and later we handle with try catch
+		*/
+			
+			File usersFile = new File(USER_PATH);
+			
+			    if (!usersFile.exists()) {
+
+			        // ✅ ADD THIS (create folder first)
+			        File parentDir = usersFile.getParentFile();
+			        if (parentDir != null && !parentDir.exists()) {
+			            parentDir.mkdirs();
+			        }
+
+			        usersFile.createNewFile();   // now it will work
+			        userList = new ArrayList<>();
+			        return;
+			    }
+			    if (usersFile.length() == 0) {
+			        userList = new ArrayList<>();
+			        return;
+			    }
+
+			    userList = objectMapper.readValue(usersFile, new TypeReference<List<User>>() {});
+			}
+		
+		// Login page
+		public boolean loginUser(String username, String password) {
+			for (User user : userList) {
+			    if (user.getName().equals(username) &&
+			        UserServiceUtil.checkPassword(password, user.getHashedPassword())) {
+
+			        this.loggedInUser = user; // ✅ clear and correct
+			        return true;
+			    }
+			
+		    }
+		    return false;
+		}
+		
+		public boolean isUserLoggedIn() {
+		    return loggedInUser != null;
+		}
+		public User getLoggedInUser() {
+		    return loggedInUser;
+		}
+		
+		
+		//Signup page
+		
+		
+		public boolean signup(User newUser) {
+		    // Check if username already exists (case-insensitive)
+		    Optional<User> existingUser = userList.stream()
+		        .filter(u -> u.getName().equalsIgnoreCase(newUser.getName()))
+		        .findFirst();
+
+		    if(existingUser.isPresent()) {
+		        System.out.println("Username already exists! Please choose another.");
+		        return false;
+		    }
+
+		    try {
+		        userList.add(newUser);
+		        saveUserListToFile();
+		        System.out.println("Signup successful ✅");
+		        return true;
+		    } catch (IOException ex){
+		        System.out.println("Error saving user data!");
+		        return false;
+		    }
+		}
+		
+	
+		 private void saveUserListToFile() throws IOException {
+		        File usersFile = new File(USER_PATH);
+		        objectMapper.writeValue(usersFile, userList);
+		    }
+		 //no need this 
+		/* public void fetchBookings(){
+		        Optional<User> userFetched = userList.stream().filter(user1 -> {
+		            return user1.getName().equals(user.getName()) && UserServiceUtil.checkPassword(user.getPassword(), user1.getHashedPassword());
+		        }).findFirst();
+		        if(userFetched.isPresent()){
+		            userFetched.get().printTickets();
+		        }
+		    }*/
+		 
+		 public void fetchBookings() {
+			    if (loggedInUser == null) {
+			        System.out.println("Please login first ❌");
+			        return;
+			    }
+			    loggedInUser.printTickets();
+			}
+		 	
+		 public boolean cancelBooking(int bookingIndex) {
+
+			    // ✅ 1. Check login
+			    if (loggedInUser == null) {
+			        System.out.println("Please login first ❌");
+			        return false;
+			    }
+
+			    // ✅ 2. Get tickets
+			    List<Ticket> tickets = loggedInUser.getTicketsBooked();
+
+			    if (tickets == null || tickets.isEmpty()) {
+			        System.out.println("No bookings found ❌");
+			        return false;
+			    }
+
+			    // ✅ 3. Validate index
+			    if (bookingIndex < 0 || bookingIndex >= tickets.size()) {
+			        System.out.println("Invalid booking selection ❌");
+			        return false;
+			    }
+
+			    // ✅ 4. Get ticket
+			    Ticket ticket = tickets.get(bookingIndex);
+
+			    // ✅ 5. Get train + seat details
+			    Train train = ticket.getTrain();
+			    List<List<Integer>> seats = train.getSeats();
+
+			    int row = ticket.getRow();
+			    int col = ticket.getCol();
+
+			    // ✅ 6. Free seat
+			    seats.get(row).set(col, 0);
+
+			    // ✅ 7. SAVE updated train (VERY IMPORTANT)
+			    try {
+			        TrainService trainService = new TrainService();
+			        trainService.addTrain(train);
+			    } catch (IOException e) {
+			        e.printStackTrace();
+			    }
+
+			    // ✅ 8. Remove booking
+			    tickets.remove(bookingIndex);
+
+			    // ✅ 9. Save user data
+			    try {
+			        saveUserListToFile();
+			    } catch (IOException e) {
+			        e.printStackTrace();
+			    }
+
+			    return true;
+			}
+		 
+			
+		    public List<Train> getTrains(String source, String destination){
+		        try{
+		            TrainService trainService = new TrainService();
+		            return trainService.searchTrains(source, destination);
+		        }catch(IOException ex){
+		            return new ArrayList<>();
+		        }
+		    }
+	
+		    public List<List<Integer>> fetchSeats(Train train){
+		        if (train == null || train.getSeats() == null) {
+		            System.out.println("Seats not available for this train ❌");
+		            return new ArrayList<>();
+		        }
+		        return train.getSeats();
+		    }
+		   
+		    public boolean bookTrainSeat(Train train, int row, int col,
+                    String source, String destination, String date) {
+		    	
+		    	if (loggedInUser == null) {
+		    	    System.out.println("Please login first ❌");
+		    	    return false;
+		    	}
+		    	
+		    	
+		        try{
+		            TrainService trainService = new TrainService();
+		            List<List<Integer>> seats = train.getSeats();
+		            if (row >= 0 && row < seats.size() && col >= 0 && col < seats.get(row).size()) {
+		                if (seats.get(row).get(col) == 0) {
+		                    seats.get(row).set(col, 1);
+		                    train.setSeats(seats);
+		                    trainService.addTrain(train);
+		                    
+		                    Ticket ticket = new Ticket(
+		                    	    UUID.randomUUID().toString(),
+		                    	    loggedInUser.getUserId(),
+		                    	    source,
+		                    	    destination,
+		                    	    date,
+		                    	    train,
+		                    	    row,
+		                    	    col
+		                    	);
+		                
+		                    loggedInUser.getTicketsBooked().add(ticket);
+		                    try {
+		                        saveUserListToFile();  // ✅ now handled
+		                    } catch (IOException e) {
+		                        e.printStackTrace();
+		                        System.out.println("Error saving user data!");
+		                    }
+
+		                    return true; // Booking successful
+		                } else {
+		                    return false; // Seat is already booked
+		                }
+		            } else {
+		                return false; // Invalid row or seat index
+		            }
+		        }catch (IOException ex){
+		            return false;
+		        }
+		    } 
+}
+
+//UserServiceUtil
+package com.irctc.booking_service.Util;
+
+//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.mindrot.jbcrypt.BCrypt;
+public class UserServiceUtil {
+
+	/*
+	    private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+	    public static String hashPassword(String plainPassword) {
+	        return encoder.encode(plainPassword);
+	    }
+
+	    public static boolean checkPassword(String plainPassword, String hashedPassword) {
+	        return encoder.matches(plainPassword, hashedPassword);
+	    }
+	    */
+	
+	 public static String hashPassword(String plainPassword) {
+	        return BCrypt.hashpw(plainPassword, BCrypt.gensalt());
+	    }
+
+	    public static boolean checkPassword(String plainPassword, String hashedPassword) {
+	        return BCrypt.checkpw(plainPassword, hashedPassword);
+	    }
+}
+
+//train.json
+
+[
+	{
+		"trainId":"abcd",
+		"trainNo":"9876",
+		"seats":[
+					[0,0,0,0,0,0],
+					[1,0,0,0,0,0],
+					[0,0,0,0,0,0],
+					[0,0,0,0,0,0]
+				],
+		"stationTimes":{
+							"Goa":"13:50:00",
+							"Mumbai":"15:30:00",
+							"Delhi":"22:10:00"
+						},
+		"stations":[
+						"Goa",
+						"Mumbai",
+						"Delhi"
+					]
+					
+		},
+		
+		{
+			"trainId":"efgh",
+			"trainNo":"5467",
+			"seats":[
+						[0,0,0,0,0,0],
+						[0,0,0,0,0,0],
+						[0,0,0,0,0,0],
+						[0,0,0,0,0,0]
+					],
+			"stationTimes":{
+								"Bangalore":"10:00:00",
+								"Belgaum":"14:00:00",
+								"Mumbai":"20:00:00"
+							},
+							
+			"stations":[
+							"Bangalore",
+							"Belgaum",
+							"Mumbai"
+						]
+					}
+			]
+
+//users.json
+
+[
+	{
+		"name":"jimin",
+		"hashedPassword":"$2a$10$D1grGd2T5SPSLCwGhWLRUeh.fD/n3/hjTpBF5umUX9QSKd4tpfWKu",
+		"ticketsBooked":[],
+		"userId":"user-001"
+	},
+	
+	{
+		"name":"shruti",
+		"hashedPassword":"$2a$10$fPiniuyyZGMRMof5HwDSN.3yGPRBuhHyw5LBDbksWdYdcjinFO8LK",
+		"ticketsBooked":[
+							{
+								"ticketId":"d4aee564-7c28-4843-8651-4dc32e5abd5e",
+								"userId":"user-002",
+								"source":"goa",
+								"destination":"mumbai",
+								"dateOfTravel":"2026-04-11",
+								"train":{
+											"trainId":"abcd",
+											"trainNo":"9876",
+											"seats":[
+														[0,0,0,0,0,0],
+														[1,0,0,0,0,0],
+														[0,0,0,0,0,0],
+														[0,0,0,0,0,0]
+													],
+													
+								"stationTimes":{
+													"Goa":"13:50:00",
+													"Mumbai":"15:30:00",
+													"Delhi":"22:10:00"
+												},
+												
+								"stations":[
+												"Goa",
+												"Mumbai",
+												"Delhi"
+											]
+						},
+						
+						"row":1,
+						"col":0
+						}
+					],
+					"userId":"user-002"
+				}
+		]
+		
+// build.gradle code till my IRCTC project
+
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.13'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.irctc'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	
+	/*
+		implementation 'org.springframework.boot:spring-boot-starter'
+		testImplementation 'org.springframework.boot:spring-boot-starter-test'
+		testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+		
+		implementation 'org.springframework.boot:spring-boot-starter-web'  */
+		
+		implementation 'org.springframework.boot:spring-boot-starter-web'
+    
+	    // Add these for Database (IRCTC needs to store tickets!)
+	   // implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	    
+	    //this for mysql
+	   		// runtimeOnly 'com.mysql:mysql-connector-j'
+	   		
+	   	// Add Oracle Driver instead of MySQL
+   		// runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+	
+	    // Add this for cleaner code (Lombok)
+	    compileOnly 'org.projectlombok:lombok'
+	    annotationProcessor 'org.projectlombok:lombok'
+	
+	    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	    
+	    
+	    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.6'
+	    
+	    //jBCrypt version
+	    implementation 'org.mindrot:jbcrypt:0.4'
+	    
+	    
+	    //Spring version
+	    //implementation 'org.springframework.boot:spring-boot-starter-security'	//forhashpassowrd
+	    
+		}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+*/

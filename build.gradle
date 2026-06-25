@@ -1,0 +1,61 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.13'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.irctc'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	
+	/*
+		implementation 'org.springframework.boot:spring-boot-starter'
+		testImplementation 'org.springframework.boot:spring-boot-starter-test'
+		testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+		
+		implementation 'org.springframework.boot:spring-boot-starter-web'  */
+		
+		implementation 'org.springframework.boot:spring-boot-starter-web'
+    
+	    // Add these for Database (IRCTC needs to store tickets!)
+	   // implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	    
+	    //this for mysql
+	   		// runtimeOnly 'com.mysql:mysql-connector-j'
+	   		
+	   	// Add Oracle Driver instead of MySQL
+   		// runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+	
+	    // Add this for cleaner code (Lombok)
+	    compileOnly 'org.projectlombok:lombok'
+	    annotationProcessor 'org.projectlombok:lombok'
+	
+	    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	    
+	    
+	    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.6'
+	    
+	    //jBCrypt version
+	    implementation 'org.mindrot:jbcrypt:0.4'
+	    
+	    
+	    //Spring version
+	    //implementation 'org.springframework.boot:spring-boot-starter-security'	//forhashpassowrd
+	    
+		}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
