@@ -44,7 +44,7 @@ public class UserBookingService{
 			
 			    if (!usersFile.exists()) {
 
-			        // ✅ ADD THIS (create folder first)
+			        // ADD THIS (create folder first)
 			        File parentDir = usersFile.getParentFile();
 			        if (parentDir != null && !parentDir.exists()) {
 			            parentDir.mkdirs();
@@ -114,15 +114,7 @@ public class UserBookingService{
 		        File usersFile = new File(USER_PATH);
 		        objectMapper.writeValue(usersFile, userList);
 		    }
-		 //no need this 
-		/* public void fetchBookings(){
-		        Optional<User> userFetched = userList.stream().filter(user1 -> {
-		            return user1.getName().equals(user.getName()) && UserServiceUtil.checkPassword(user.getPassword(), user1.getHashedPassword());
-		        }).findFirst();
-		        if(userFetched.isPresent()){
-		            userFetched.get().printTickets();
-		        }
-		    }*/
+	
 		 
 		 public void fetchBookings() {
 			    if (loggedInUser == null) {
@@ -134,13 +126,13 @@ public class UserBookingService{
 		 	
 		 public boolean cancelBooking(int bookingIndex) {
 
-			    // ✅ 1. Check login
+			    //  1. Check login
 			    if (loggedInUser == null) {
 			        System.out.println("Please login first ❌");
 			        return false;
 			    }
 
-			    // ✅ 2. Get tickets
+			    // 2. Get tickets
 			    List<Ticket> tickets = loggedInUser.getTicketsBooked();
 
 			    if (tickets == null || tickets.isEmpty()) {
@@ -148,26 +140,26 @@ public class UserBookingService{
 			        return false;
 			    }
 
-			    // ✅ 3. Validate index
+			    // 3. Validate index
 			    if (bookingIndex < 0 || bookingIndex >= tickets.size()) {
 			        System.out.println("Invalid booking selection ❌");
 			        return false;
 			    }
 
-			    // ✅ 4. Get ticket
+			    //  4. Get ticket
 			    Ticket ticket = tickets.get(bookingIndex);
 
-			    // ✅ 5. Get train + seat details
+			    //  5. Get train + seat details
 			    Train train = ticket.getTrain();
 			    List<List<Integer>> seats = train.getSeats();
 
 			    int row = ticket.getRow();
 			    int col = ticket.getCol();
 
-			    // ✅ 6. Free seat
+			    //  6. Free seat
 			    seats.get(row).set(col, 0);
 
-			    // ✅ 7. SAVE updated train (VERY IMPORTANT)
+			    //  7. SAVE updated train (VERY IMPORTANT)
 			    try {
 			        TrainService trainService = new TrainService();
 			        trainService.addTrain(train);
@@ -175,10 +167,10 @@ public class UserBookingService{
 			        e.printStackTrace();
 			    }
 
-			    // ✅ 8. Remove booking
+			    //  8. Remove booking
 			    tickets.remove(bookingIndex);
 
-			    // ✅ 9. Save user data
+			    //  9. Save user data
 			    try {
 			        saveUserListToFile();
 			    } catch (IOException e) {
@@ -237,7 +229,7 @@ public class UserBookingService{
 		                
 		                    loggedInUser.getTicketsBooked().add(ticket);
 		                    try {
-		                        saveUserListToFile();  // ✅ now handled
+		                        saveUserListToFile();  // now handled
 		                    } catch (IOException e) {
 		                        e.printStackTrace();
 		                        System.out.println("Error saving user data!");

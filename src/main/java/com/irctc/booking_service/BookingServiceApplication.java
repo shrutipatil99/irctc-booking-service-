@@ -131,7 +131,7 @@ public class BookingServiceApplication {
 
                     lastTravelDate = date;
                     
-                 // ✅ RESET OLD TRAIN SELECTION HERE
+                 // RESET OLD TRAIN SELECTION HERE
                     trainSelectedForBooking = null;
                     
                     lastSource = source;
@@ -140,20 +140,20 @@ public class BookingServiceApplication {
                     List<Train> trains = userBookingService.getTrains(source, dest);
                     
                     
-                    // ✅ Step 1: check empty
+                    //  Step 1: check empty
                     if (trains.isEmpty()) {
                         System.out.println("No trains found ❌");
                         break;
                     }
 
-                    // ✅ Step 2: print trains
+                    //  Step 2: print trains
                     int index = 1;
                     for (Train t : trains) {
                         System.out.println(index + " Train id : " + t.getTrainId());
                         index++;
                     }
 
-                    // ✅ Step 3: ask user to select
+                    //  Step 3: ask user to select
                     System.out.println("Select a train by typing 1,2,3...");
                     int choice = Integer.parseInt(scanner.next());
 
@@ -202,7 +202,7 @@ public class BookingServiceApplication {
 
                     int row = -1, col = -1;
 
-                    // ✅ Safe row input
+                    //  Safe row input
                     while (true) {
                         System.out.println("Enter the row number (0 to " + (seats.size() - 1) + "):");
                         String input = scanner.next();
@@ -218,7 +218,7 @@ public class BookingServiceApplication {
                         }
                     }
 
-                    // ✅ Safe column input
+                    //  Safe column input
                     while (true) {
                         System.out.println("Enter the column number (0 to " + (seats.get(0).size() - 1) + "):");
                         String input = scanner.next();
@@ -242,7 +242,7 @@ public class BookingServiceApplication {
                     
                     if (booked) {
                         System.out.println("Booked! Enjoy your journey ✅");
-                     // ✅ RESET OLD TRAIN SELECTION HERE
+                     //  RESET OLD TRAIN SELECTION HERE
                         trainSelectedForBooking = null;
                         lastTravelDate = null;
                     } else {
@@ -289,7 +289,7 @@ public class BookingServiceApplication {
             }
          
         }
-     // ✅ ADD HERE
+     //  ADD HERE
         scanner.close();
         System.out.println("Thank you for using IRCTC 🚆");
 	}
