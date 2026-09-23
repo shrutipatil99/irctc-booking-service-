@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRCTC - Login / Signup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-image:url("image/irctc-train.png");
+            background-size:cover;
+            display: flex;
+            justify-content: left;
+            margin-left:70px;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
+        }
+        .brand-header {
+            background-color: rgba(0, 0, 0,0.7);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .auth-card {
+        	background-color:rgba(255,255,255,0.35);
+            width: 90%; max-width: 380px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.50);
+        }
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            color: black;
+            background-color:rgba(255,255,255,0.5);
+        }
+        
+         .nav-tabs .nav-link {
+            color: black;
+            font-weight:bold;
+            font-size:18px;
+        }
+        
+        .form-label{
+        	color: black;
+        	font-weight: bold;
+        }
+        
+        .form-control{
+        	background-color:rgba(255,255,255,0.30);
+        }
+        
+        .form-control:focus {
+        	background-color: rgba(255, 255, 255, 0.30);
+		    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+		    border-color: black;
+		}
+		
+		.form-control::placeholder {
+		    color: black;
+		    font-weight: 500; 
+		}
+        
+        /* responsive-media query  Tablet — 481px se 768px ke beech */
+		 @media (min-width: 481px) and (max-width:768px){
+			 body{
+			 	margin-left:30px;
+		 	}
+		 	
+		}
+		
+		/* Mobile — bahut chhoti screen */
+		@media (max-width: 480px) {
+		    body {
+		        justify-content: center;
+		        margin-left: 0;
+		    }
+		    .welcome-text{
+		    	display:none;
+		    }
+		}
+		
+		.welcome-text{
+			position:relative;
+			height:330px;
+			flex: 1;              /* bachi hui space automatically le lega */
+   			text-align: center; 
+			color:rgba(255,0,0,0.88);
+			margin-bottom:30px;
+			
+			
+		}
+		
+    </style>
+</head>
+<body>
+
+    <div class="card auth-card">
+        <div class="brand-header">
+            <h4 class="mb-0" style="font-weight:bold;">IRCTC Booking</h4>
+        </div>
+
+        <div class="card-body">
+            <!-- Tabs to switch between Login and Signup -->
+            <ul class="nav nav-tabs mb-3" id="authTab">
+                <li class="nav-item">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#loginPane" type="button">Login</button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#signupPane" type="button">Signup</button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <!-- LOGIN FORM — matches loginUser(username, password) -->
+                <div class="tab-pane fade show active" id="loginPane">
+                    <form onsubmit="return validateLogin()">
+                        <div class="mb-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" class="form-control" id="loginName" placeholder="Enter username">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" id="loginPassword" placeholder="Enter password">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Login</button>
+                        <p id="loginMsg" class="text-danger mt-2 mb-0"></p>
+                    </form>
+                </div>
+
+                <!-- SIGNUP FORM — matches User(name, hashedPassword, ticketsBooked, userId) -->
+                <div class="tab-pane fade" id="signupPane">
+                    <form onsubmit="return validateSignup()">
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="signupName" placeholder="Enter your name">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" id="signupPassword" placeholder="Create a password">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="signupConfirm" placeholder="Re-enter password">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Sign Up</button>
+                        <p id="signupMsg" class="text-danger mt-2 mb-0"></p>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <div class="welcome-text">
+    	<img src="image/irctc-logo.png"	alt="IRCTC Logo" width="100" style="margin-bottom:10px;">
+        <h1 style="font-weight:bold;">Welcome to Indian Railway</h1>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Login validation — mirrors loginUser(username, password) in UserBookingService.java
+        function validateLogin() {
+            let username = document.getElementById("loginName").value;
+            let password = document.getElementById("loginPassword").value;
+            let msg = document.getElementById("loginMsg");
+
+            if (username === "" || password === "") {
+                msg.innerText = "Username and password are required.";
+                return false;
+            }
+
+            msg.style.color = "green";
+            msg.innerText = "Login submitted (demo only — not connected to backend).";
+            return false; // demo page, so we don't actually navigate away
+        }
+
+        // Signup validation — mirrors the User entity's required fields (name, hashedPassword)
+        function validateSignup() {
+            let name = document.getElementById("signupName").value;
+            let password = document.getElementById("signupPassword").value;
+            let confirm = document.getElementById("signupConfirm").value;
+            let msg = document.getElementById("signupMsg");
+
+            if (name === "" || password === "") {
+                msg.innerText = "Name and password are required.";
+                return false;
+            }
+
+            if (password !== confirm) {
+                msg.innerText = "Passwords do not match.";
+                return false;
+            }
+
+            msg.style.color = "green";
+            msg.innerText = "Signup submitted (demo only — not connected to backend).";
+            return false; // demo page
+        }
+    </script>
+
+</body>
+</html>
