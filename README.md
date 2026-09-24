@@ -84,6 +84,43 @@ This package is **additional exploration built alongside IRCTC, not a connected 
 
 If IRCTC were ever turned into a real client-server application supporting simultaneous bookings, this multithreaded pattern is the foundation that would be needed.
 
+## Frontend / Web Pages
+
+As part of practicing frontend development, two standalone HTML/CSS pages were 
+built inside the `web/` folder, styled to resemble the IRCTC UI. Built with 
+Bootstrap 5.3.0 and Google Fonts (Poppins).
+
+### `irctc-login-signup.html`
+A login/signup card with Bootstrap tabs, set against a full-page train background image.
+
+- Login form: username + password
+- Signup form: full name, password, confirm password
+- JS-side validation only — checks required fields and password match, shows 
+  inline success/error messages
+- Field names mirror the backend's `User` entity (`name`, `hashedPassword`) 
+  and `UserBookingService.loginUser(username, password)` method, but the 
+  form does **not** actually call the backend
+
+### `irctc-train-search.html`
+A train search page with a source/destination form and a results table.
+
+- Search form filters a **hardcoded JS array** of 4 demo trains by source 
+  and destination station (case-insensitive)
+- Each demo train object mirrors the shape of the backend's `Train` entity: 
+  `trainId`, `trainNo`, `stations` (route order), `stationTimes`
+- Search logic mimics `TrainService.searchTrains(source, destination)`, 
+  but runs entirely client-side on static demo data
+
+**Note:** Both pages are static, standalone UI built purely for frontend 
+practice — they are **not connected** to the Java backend or its JSON 
+data files. Backend integration was outside the scope of this exercise; 
+the goal was to practice HTML/CSS layout, Bootstrap components, and 
+JavaScript form handling/DOM manipulation independently.
+
+### View the pages
+- Clone/download the repo and open the HTML files in `web/` directly in a browser, or
+- Enable GitHub Pages (Settings → Pages) to view them via a live link
+
 ## Author
 
 **Shruti Patil**
