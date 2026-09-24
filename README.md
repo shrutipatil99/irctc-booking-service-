@@ -93,6 +93,8 @@ Bootstrap 5.3.0 and Google Fonts (Poppins).
 ### `irctc-login-signup.html`
 A login/signup card with Bootstrap tabs, set against a full-page train background image.
 
+![Login Signup Page](screenshots/login.PNG)
+
 - Login form: username + password
 - Signup form: full name, password, confirm password
 - JS-side validation only — checks required fields and password match, shows 
@@ -103,6 +105,8 @@ A login/signup card with Bootstrap tabs, set against a full-page train backgroun
 
 ### `irctc-train-search.html`
 A train search page with a source/destination form and a results table.
+
+![Train Search Page](screenshots/train-search.PNG)
 
 - Search form filters a **hardcoded JS array** of 4 demo trains by source 
   and destination station (case-insensitive)
