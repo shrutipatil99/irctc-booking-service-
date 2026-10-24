@@ -40,7 +40,7 @@ src/main/java/com/irctc/
 ## Features
 
 - **Signup / Login** — passwords hashed with jBCrypt (`BCrypt.hashpw` / `BCrypt.checkpw`); raw passwords are never stored or compared directly
-- **Search trains** — by source, destination, and travel date; validates that source appears before destination in the train's station order
+- **Search trains** — asks for source, destination and travel date (`yyyy-mm-dd`, format-checked with `LocalDate.parse`). Trains are filtered by source and destination only, and the source must appear before the destination in the train's station order
 - **Book a seat** — pick a train from search results, view the seat matrix, select row/column; booking is rejected if the seat is already taken
 - **Cancel a booking** — frees the seat back on the train and removes the ticket from the user's booking list
 - **Fetch bookings** — view all tickets booked by the logged-in user
