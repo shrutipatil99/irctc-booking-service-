@@ -80,7 +80,7 @@ This package is **additional exploration built alongside IRCTC, not a connected 
 | `IrctcServer` / `IrctcClient` | Single-threaded, blocking server — handles **one client connection at a time** via `ServerSocket.accept()` |
 | `IrctcMultiTreadServer` / `IrctcMultiTreadClient` | Multithreaded server — spawns a **new thread per connection** using a `Consumer<Socket>` functional interface |
 
-**Tested directly:** sent 100 concurrent client connections to both servers. The multithreaded server successfully handled all 100. The single-threaded server crashed under the same load with a `SocketTimeoutException` (see the bug noted above) — a clear, hands-on demonstration of why thread-per-connection (or a thread pool) matters for handling concurrent clients.
+**Tested directly:** sent 100 concurrent client connections to both servers. The multithreaded server successfully handled all 100. The single-threaded server stopped with a `SocketTimeoutException` after its 20-second idle timeout, when no client connected in time (see the bug noted above). That was the timeout bug, not a failure under load. The multithreaded server handles each connection in its own thread, which is the model needed for many simultaneous clients.
 
 If IRCTC were ever turned into a real client-server application supporting simultaneous bookings, this multithreaded pattern is the foundation that would be needed.
 
